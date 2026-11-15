@@ -56,7 +56,18 @@ pub fn now_playing(input: NowPlayingInput) -> Option<NowPlaying> {
 			if let Some(ref t) = title {
 				let cleaned = crate::parse::strip_player_suffix(t);
 				if !cleaned.is_empty() {
-					file_path = Some(format!("/home/user/Anime/{}.mkv", cleaned));
+					let lower_cleaned = cleaned.to_lowercase();
+					let path_str = if lower_cleaned.ends_with(".mkv")
+						|| lower_cleaned.ends_with(".mp4")
+						|| lower_cleaned.ends_with(".avi")
+						|| lower_cleaned.ends_with(".webm")
+						|| lower_cleaned.ends_with(".mov")
+					{
+						format!("/home/user/Anime/{}", cleaned)
+					} else {
+						format!("/home/user/Anime/{}.mkv", cleaned)
+					};
+					file_path = Some(path_str);
 				}
 			}
 		}
