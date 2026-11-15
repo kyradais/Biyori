@@ -44,15 +44,14 @@ pub fn now_playing(input: NowPlayingInput) -> Option<NowPlaying> {
 		} else {
 			None
 		};
-		let mut file_path = ipc.or_else(|| file_path_from_cmd(proc.cmd()));
+		let file_path = ipc.or_else(|| file_path_from_cmd(proc.cmd()));
 		let title = get_linux_window_title(pid_u32);
-		if file_path.is_none() {
-			if let Some(ref t) = title {
-				let cleaned = crate::parse::strip_player_suffix(t);
-				// Use the title even if it doesn't parse as a path, but make it look like a filename
-				file_path = Some(format!("/home/user/Anime/{cleaned}.mkv"));
-			}
+		
+		// Debug: Force log if title exists
+		if let Some(ref t) = title {
+			eprintln!("DEBUG: Player: {}, Title: {}", key, t);
 		}
+
 		hits.push(NowPlaying {
 			player: key,
 			window_id: pid_u32.to_string(),
