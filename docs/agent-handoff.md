@@ -7,7 +7,7 @@ verifies it against the worktree before proceeding.
 Use `idle` when no work is being handed off, `active` when another agent must
 continue unfinished work, and `complete` when the task is finished.
 
-**Status:** active
+**Status:** complete
 
 When handing off, replace the idle state with the following information:
 

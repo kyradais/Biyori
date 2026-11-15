@@ -54,7 +54,7 @@ implemented, validated, reordered, and closed.
 
 - Order: 1
 - Type: bug
-- Status: in_progress
+- Status: done
 - Depends on: none
 - Related to: none
 - Reported by: user
@@ -76,8 +76,8 @@ implemented, validated, reordered, and closed.
 
 #### Acceptance criteria
 
-- [ ] VLC window title is correctly captured and mapped to a media title / file path.
-- [ ] Biyori avoids "Unknown Title" during VLC playback.
+- [x] VLC window title is correctly captured and mapped to a media title / file path.
+- [x] Biyori avoids "Unknown Title" during VLC playback.
 
 #### Implementation checklist
 
