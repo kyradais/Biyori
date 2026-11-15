@@ -17,6 +17,12 @@ pub fn strip_player_suffix(value: &str) -> &str {
 			return value[..idx].trim();
 		}
 	}
+	if let Some(idx) = lower.rfind(" - vlc media player") {
+		return value[..idx].trim();
+	}
+	if let Some(idx) = lower.rfind(" - vlc") {
+		return value[..idx].trim();
+	}
 	value.trim()
 }
 

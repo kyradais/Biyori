@@ -49,7 +49,13 @@ pub fn now_playing(input: NowPlayingInput) -> Option<NowPlaying> {
 		if file_path.is_none() {
 			if let Some(ref t) = title {
 				let cleaned = crate::parse::strip_player_suffix(t);
-				file_path = extract_file_path(t).or_else(|| Some(cleaned.to_string()));
+				file_path = extract_file_path(t).or_else(|| {
+					if cleaned.is_empty() {
+						None
+					} else {
+						Some(format!("{cleaned}.mkv"))
+					}
+				});
 			}
 		}
 		hits.push(NowPlaying {
