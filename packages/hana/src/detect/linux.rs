@@ -1,6 +1,30 @@
-use super::shared::{classify_player, file_path_from_cmd, pick_hit, query_unix_mpv};
+use super::shared::{classify_player, extract_file_path, file_path_from_cmd, pick_hit, query_unix_mpv};
 use crate::types::{NowPlaying, NowPlayingInput};
+use std::process::Command;
 use sysinfo::{ProcessesToUpdate, System};
+
+fn get_linux_window_title(pid: u32) -> Option<String> {
+	let output = Command::new("xdotool")
+		.args(["search", "--pid", &pid.to_string(), "--name", ".*"])
+		.output()
+		.ok()?;
+	let window_ids = String::from_utf8_lossy(&output.stdout);
+	for wid in window_ids.lines() {
+		let wid = wid.trim();
+		if wid.is_empty() {
+			continue;
+		}
+		let title_output = Command::new("xdotool")
+			.args(["getwindowname", wid])
+			.output()
+			.ok()?;
+		let title = String::from_utf8_lossy(&title_output.stdout).trim().to_string();
+		if !title.is_empty() {
+			return Some(title);
+		}
+	}
+	None
+}
 
 pub fn now_playing(input: NowPlayingInput) -> Option<NowPlaying> {
 	let mut sys = System::new();
@@ -20,11 +44,17 @@ pub fn now_playing(input: NowPlayingInput) -> Option<NowPlaying> {
 		} else {
 			None
 		};
-		let file_path = ipc.or_else(|| file_path_from_cmd(proc.cmd()));
+		let mut file_path = ipc.or_else(|| file_path_from_cmd(proc.cmd()));
+		let title = get_linux_window_title(pid_u32);
+		if file_path.is_none() {
+			if let Some(ref t) = title {
+				file_path = extract_file_path(t);
+			}
+		}
 		hits.push(NowPlaying {
 			player: key,
 			window_id: pid_u32.to_string(),
-			title: None,
+			title,
 			file_path,
 			url: None,
 			foreground: false,

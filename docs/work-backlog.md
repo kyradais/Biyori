@@ -50,7 +50,53 @@ implemented, validated, reordered, and closed.
 
 ## Queue
 
-No bugs or features have been reported into the queue yet.
+### BUG-001 — VLC playback title detection returns Unknown Title
+
+- Order: 1
+- Type: bug
+- Status: in_progress
+- Depends on: none
+- Related to: none
+- Reported by: user
+- Priority: high
+- Coordinator: Azalea
+- Workers and write scopes: sequential
+- Worktree/branch: dev-ikky
+- Parallelization: sequential by default
+
+#### Current behavior and requested outcome
+
+- Current/observed behavior: VLC process is detected by Biyori, but currently playing media displays as "Unknown Title" despite VLC sending media title metadata.
+- Expected/requested outcome: Biyori correctly extracts and parses the anime title from VLC's window title / metadata during playback.
+- Reproduction/conditions: Play an anime file in VLC Media Player with media detection enabled.
+
+#### Diagnosis or design
+
+- Root cause / design notes: Investigating title extraction for VLC in `packages/hana/src/detect/` and how window titles / file paths are parsed when VLC updates its window title.
+
+#### Acceptance criteria
+
+- [ ] VLC window title is correctly captured and mapped to a media title / file path.
+- [ ] Biyori avoids "Unknown Title" during VLC playback.
+
+#### Implementation checklist
+
+- [ ] Confirm the report, scope, and acceptance criteria.
+- [ ] Inspect window title handling for VLC in `packages/hana`.
+- [ ] Implement fix and verify with tests.
+
+#### Files and implementation notes
+
+- `packages/hana/src/detect/linux.rs`: Modified to fetch window titles via `xdotool` search/getwindowname for non-browser media player processes on Linux, falling back to `extract_file_path` on the retrieved title.
+
+#### Verification results
+
+- Code modified for Linux window title capture.
+- Compilation (`cargo test`) requires a system C toolchain (`gcc`/`cc`) on Linux.
+
+#### Blockers
+
+- Lack of `gcc`/`cc` toolchain for native Rust build on this environment. Will commit code and leave ready for user testing.
 
 ## Reorder history
 

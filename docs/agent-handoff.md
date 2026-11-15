@@ -7,50 +7,54 @@ verifies it against the worktree before proceeding.
 Use `idle` when no work is being handed off, `active` when another agent must
 continue unfinished work, and `complete` when the task is finished.
 
-**Status:** idle
+**Status:** active
 
 When handing off, replace the idle state with the following information:
 
 ## Task and acceptance criteria
 
-<!-- State the requested outcome and how to verify it. -->
+- Task: BUG-001 VLC playback title detection returns Unknown Title.
+- Criteria: VLC window title is captured and parsed correctly without showing "Unknown Title".
 
 ## Backlog item
 
-<!-- Use BUG-NNN or FEAT-NNN when this handoff belongs to backlog work; otherwise write "none". -->
+- BUG-001
 
 ## Coordinator and parallel workers
 
-- Coordinator:
-- Workers and owned paths:
-- Worktree/branch per worker:
-- Integration status:
+- Coordinator: Azalea
+- Workers and owned paths: None
+- Worktree/branch: dev-ikky
+- Integration status: In progress
 
 ## Progress
 
-- Completed:
-- Remaining:
+- Completed: Modified `packages/hana/src/detect/linux.rs` to fetch window title using `xdotool` on Linux and fallback to title parsing for VLC playback.
+- Remaining: Commit changes to `dev-ikky` and push.
 
 ## Changed files
 
-<!-- List paths and summarize why they changed. -->
+- packages/hana/src/detect/linux.rs
+- docs/work-backlog.md
+- docs/agent-handoff.md
 
 ## Decisions and constraints
 
-<!-- Include relevant user preferences and choices; do not include secrets. -->
+- Follow AGENTS.md guidelines.
 
 ## Validation
 
-<!-- Record exact commands and pass/fail results, including checks not run. -->
+- Native build blocked due to missing `cc` linker on host environment. Code is ready to be compiled on user's Kubuntu system.
 
 ## Blockers
 
-<!-- State none, or describe the specific blocker and what is needed. -->
+- Lack of `gcc` on backend server prevents local `cargo build` for AppImage.
 
 ## Git and worktree state
 
-<!-- Record relevant staged/unstaged changes and commit identifiers, if any. -->
+- Branch: dev-ikky
+- Untracked/Modified: `packages/hana/src/detect/linux.rs`, `docs/work-backlog.md`, `docs/agent-handoff.md`.
 
 ## Next actions
 
-<!-- Give ordered, concrete steps. Avoid “continue” or “finish the work”. -->
+- Commit the modified files using Conventional Commits and push to `origin/dev-ikky`.
