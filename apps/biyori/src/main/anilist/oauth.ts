@@ -4,10 +4,7 @@ import { buildAuthorizeUrl } from "./oauth-url";
 export { ANILIST_REDIRECT_URI, buildAuthorizeUrl, normalizeAnilistToken } from "./oauth-url";
 
 const DEFAULT_EXPIRES_IN_SECONDS = 365 * 24 * 60 * 60;
-const ANILIST_CLIENT_ID = import.meta.env.VITE_ANILIST_CLIENT_ID;
-if (!ANILIST_CLIENT_ID) {
-	throw new Error("VITE_ANILIST_CLIENT_ID is not set");
-}
+const ANILIST_CLIENT_ID = import.meta.env.VITE_ANILIST_CLIENT_ID ?? "";
 
 let loginError: string | null = null;
 
