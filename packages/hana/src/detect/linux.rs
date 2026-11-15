@@ -48,7 +48,8 @@ pub fn now_playing(input: NowPlayingInput) -> Option<NowPlaying> {
 		let title = get_linux_window_title(pid_u32);
 		if file_path.is_none() {
 			if let Some(ref t) = title {
-				file_path = extract_file_path(t);
+				let cleaned = crate::parse::strip_player_suffix(t);
+				file_path = extract_file_path(t).or_else(|| Some(cleaned.to_string()));
 			}
 		}
 		hits.push(NowPlaying {
