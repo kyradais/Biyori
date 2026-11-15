@@ -50,7 +50,7 @@ pub fn now_playing(input: NowPlayingInput) -> Option<NowPlaying> {
 			if let Some(ref t) = title {
 				let cleaned = crate::parse::strip_player_suffix(t);
 				// Use the title even if it doesn't parse as a path, but make it look like a filename
-				file_path = Some(format!("{}.mkv", cleaned.replace("/", "_").replace("\\", "_")));
+				file_path = Some(format!("/home/user/Anime/{cleaned}.mkv"));
 			}
 		}
 		hits.push(NowPlaying {
