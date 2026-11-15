@@ -7,10 +7,7 @@ import type { NowPlayingSnapshot } from "../track/types";
 const CONNECT_RETRY_MS = 5_000;
 const MAX_CONNECTION_RETRIES = 30;
 const COVER_PROXY_ORIGIN = "https://corx.venipa.workers.dev";
-const DISCORD_CLIENT_ID = import.meta.env.VITE_DISCORD_CLIENT_ID;
-if (!DISCORD_CLIENT_ID) {
-	throw new Error("VITE_DISCORD_CLIENT_ID is not set");
-}
+const DISCORD_CLIENT_ID = import.meta.env.VITE_DISCORD_CLIENT_ID ?? "";
 
 function proxiedCoverImage(coverUrl: string): string | undefined {
 	if (!coverUrl) {
