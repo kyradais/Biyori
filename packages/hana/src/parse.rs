@@ -11,17 +11,17 @@ pub fn player_markers() -> impl Iterator<Item = &'static str> {
 
 pub fn strip_player_suffix(value: &str) -> &str {
 	let lower = value.to_ascii_lowercase();
-	if let Some(idx) = lower.rfind(" - vlc media player") {
-		return value[..idx].trim();
-	}
-	if let Some(idx) = lower.rfind(" - vlc") {
-		return value[..idx].trim();
-	}
 	if let Some(idx) = lower.rfind(" - ") {
 		let rest = lower[idx + 3..].trim();
 		if player_markers().any(|marker| rest.starts_with(marker)) {
 			return value[..idx].trim();
 		}
+	}
+	if let Some(idx) = lower.rfind(" - vlc media player") {
+		return value[..idx].trim();
+	}
+	if let Some(idx) = lower.rfind(" - vlc") {
+		return value[..idx].trim();
 	}
 	value.trim()
 }
