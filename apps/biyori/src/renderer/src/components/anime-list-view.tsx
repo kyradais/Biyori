@@ -42,7 +42,7 @@ import { formatLocalDateTime, formatTimeAgo } from "@/mainview/lib/format-date";
 import { useListFilterText } from "@/mainview/lib/list-filter";
 import { libraryEpisodeTooltip, listProgressRatio } from "@/mainview/lib/list-progress";
 import { requestAnimeDelete, type SelectedAnime, setOrderedAnimeIds, setSelectedAnime, useSelectedAnime } from "@/mainview/lib/selected-anime";
-import { usePersistedColumnSizing } from "@/mainview/lib/table-column-sizing";
+import { usePersistedTableState } from "@/mainview/lib/table-column-sizing";
 import { cn } from "@/mainview/lib/utils";
 import { trpc } from "@/mainview/trpc";
 import type { AppRouter } from "@/shared/app-router";
@@ -358,10 +358,9 @@ export function AnimeListView({
 	const selected = useSelectedAnime();
 	const [sorting, setSorting] = useState<SortingState>(readStoredSort);
 	const [menuRow, setMenuRow] = useState<AnimeRow | null>(null);
-	const compactSizing = usePersistedColumnSizing("anime-list");
+	const { columnSizing, onColumnSizingChange, columnOrder, onColumnOrderChange, columnVisibility, onColumnVisibilityChange } = usePersistedTableState("anime-list");
 	const viewAs: AnimeListViewAs = settingsQuery.data?.animeListViewAs ?? "compact";
 	const posters = viewAs === "posters";
-	const { columnSizing, onColumnSizingChange } = compactSizing;
 	const setSettings = trpc.settings.set.useMutation({
 		onSuccess: (settings) => {
 			utils.settings.get.setData(undefined, settings);
@@ -382,7 +381,9 @@ export function AnimeListView({
 			setSorting(next);
 		},
 		onColumnSizingChange,
-		state: { sorting, globalFilter, columnSizing },
+		onColumnOrderChange,
+		onColumnVisibilityChange,
+		state: { sorting, globalFilter, columnSizing, columnOrder, columnVisibility },
 		meta: { playingId },
 	});
 	const tableRef = useRef(table);

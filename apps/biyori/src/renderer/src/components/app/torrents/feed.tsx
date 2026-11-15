@@ -23,7 +23,7 @@ import { ScrollArea } from "@/mainview/components/ui/scroll-area";
 import { TableRow } from "@/mainview/components/ui/table";
 import { useAnimeInfoNav } from "@/mainview/lib/anime-info-nav";
 import { formatLocalDateTime } from "@/mainview/lib/format-date";
-import { usePersistedColumnSizing } from "@/mainview/lib/table-column-sizing";
+import { usePersistedTableState } from "@/mainview/lib/table-column-sizing";
 import { cn } from "@/mainview/lib/utils";
 import { trpc } from "@/mainview/trpc";
 
@@ -65,7 +65,7 @@ export function TorrentFeed({ items }: { items: TorrentRow[] }): ReactElement {
 	const [infoRow, setInfoRow] = useState<TorrentRow | null>(null);
 	const rowClickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const { t } = useTranslation();
-	const { columnSizing, onColumnSizingChange } = usePersistedColumnSizing("torrents");
+	const { columnSizing, onColumnSizingChange, columnOrder, onColumnOrderChange, columnVisibility, onColumnVisibilityChange } = usePersistedTableState("torrents");
 
 	useEffect(() => {
 		return () => {
@@ -196,7 +196,9 @@ export function TorrentFeed({ items }: { items: TorrentRow[] }): ReactElement {
 		onSortingChange: setSorting,
 		onRowSelectionChange: setRowSelection,
 		onColumnSizingChange,
-		state: { sorting, rowSelection, columnSizing },
+		onColumnOrderChange,
+		onColumnVisibilityChange,
+		state: { sorting, rowSelection, columnSizing, columnOrder, columnVisibility },
 	});
 
 	const selected = table.getSelectedRowModel().rows;

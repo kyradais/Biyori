@@ -25,7 +25,7 @@ import { TableRow } from "@/mainview/components/ui/table";
 import { TableRowsSkeleton } from "@/mainview/components/ui/table-rows-skeleton";
 import { Toggle } from "@/mainview/components/ui/toggle";
 import { useAnimeInfoNav } from "@/mainview/lib/anime-info-nav";
-import { usePersistedColumnSizing } from "@/mainview/lib/table-column-sizing";
+import { usePersistedTableState } from "@/mainview/lib/table-column-sizing";
 import { trpc } from "@/mainview/trpc";
 
 const route = getRouteApi("/app/history");
@@ -133,7 +133,7 @@ export function HistoryView() {
 	const query = trpc.history.page.useInfiniteQuery({ limit: PAGE_SIZE, types: types.length > 0 ? types : undefined }, { getNextPageParam: (page) => page.nextCursor });
 	const utils = trpc.useUtils();
 	const animeInfo = useAnimeInfoNav();
-	const sizing = usePersistedColumnSizing("history");
+	const sizing = usePersistedTableState("history");
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [menuRow, setMenuRow] = useState<HistoryGroupRow | null>(null);
 	const [clearKind, setClearKind] = useState<HistoryKind | null>(null);
@@ -170,7 +170,9 @@ export function HistoryView() {
 		getRowId: (row) => `${row.group}:${row.ids[0]}`,
 		onSortingChange: setSorting,
 		onColumnSizingChange: sizing.onColumnSizingChange,
-		state: { sorting, columnSizing: sizing.columnSizing },
+		onColumnOrderChange: sizing.onColumnOrderChange,
+		onColumnVisibilityChange: sizing.onColumnVisibilityChange,
+		state: { sorting, columnSizing: sizing.columnSizing, columnOrder: sizing.columnOrder, columnVisibility: sizing.columnVisibility },
 	});
 
 	function toggleType(type: HistoryChangeType, pressed: boolean): void {

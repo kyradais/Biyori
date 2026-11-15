@@ -1,8 +1,9 @@
+import { ContextMenu, ContextMenuCheckboxItem, ContextMenuContent, ContextMenuTrigger } from "@/mainview/components/ui/context-menu";
 import { useTranslation } from "@biyori/translations/react";
 import { flexRender, type Header, type Row, type Table as TanstackTable } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ChevronDownIcon, ChevronsUpDownIcon, ChevronUpIcon } from "lucide-react";
-import { type ComponentProps, type CSSProperties, cloneElement, isValidElement, memo, type ReactElement, type ReactNode, useEffect, useRef } from "react";
+import { type ComponentProps, type CSSProperties, cloneElement, isValidElement, memo, type ReactElement, type ReactNode, useEffect, useRef, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/mainview/components/ui/table";
 import { cn } from "@/mainview/lib/utils";
 
@@ -182,6 +183,17 @@ const LeafRow = memo(
 	(a, b) => a.row === b.row && a.indent === b.indent && a.index === b.index && a.version === b.version && a.columnsKey === b.columnsKey && a.height === b.height,
 ) as typeof LeafRowImpl;
 
+function reorderColumn(draggedId: string, targetId: string, currentOrder: string[]) {
+	const nextOrder = [...currentOrder];
+	const oldIndex = nextOrder.indexOf(draggedId);
+	const newIndex = nextOrder.indexOf(targetId);
+	if (oldIndex !== -1 && newIndex !== -1) {
+		nextOrder.splice(oldIndex, 1);
+		nextOrder.splice(newIndex, 0, draggedId);
+	}
+	return nextOrder;
+}
+
 export function DataTable<TData>({
 	table,
 	onRowClick,
@@ -212,6 +224,7 @@ export function DataTable<TData>({
 	const rowSize = rowSizeProp ?? (compact ? 32 : 40);
 	const renderTick = useRef(0);
 	renderTick.current += 1;
+	const [draggedColumnId, setDraggedColumnId] = useState<string | null>(null);
 	const visibleColumns = table.getVisibleLeafColumns();
 	const columnsKey = visibleColumns.map((column) => column.id).join(",");
 	const columnVars: Record<string, string> = { width: `${table.getTotalSize()}px` };
@@ -238,90 +251,117 @@ export function DataTable<TData>({
 	}
 
 	return (
-		<div ref={rootRef}>
-			<Table
-				containerClassName='overflow-visible'
-				className={cn("table-fixed", compact ? "[&_th]:h-8 [&_td]:py-1" : rowSize >= 56 ? "[&_th]:h-10 [&_td]:py-2" : undefined)}
-				style={columnVars as CSSProperties}>
-				<TableHeader className='sticky top-0 z-20 bg-card'>
-					{table.getHeaderGroups().map((headerGroup) => (
-						<TableRow key={headerGroup.id} className='hover:bg-transparent'>
-							{headerGroup.headers.map((header) => {
-								const sorted = header.column.getIsSorted();
-								return (
-									<TableHead
-										key={header.id}
-										colSpan={header.colSpan}
-										aria-sort={sorted === "asc" ? "ascending" : sorted === "desc" ? "descending" : undefined}
-										className={cn(
-											"relative overflow-visible bg-card transition-colors hover:bg-muted/60",
-											sorted && "bg-muted/70 hover:bg-muted",
-											header.column.columnDef.meta?.className,
-										)}
-										style={{ width: columnWidth(header.column.id) }}>
-										<SortableHead header={header} />
-										{header.column.getCanResize() ? (
-											<button
-												type='button'
-												tabIndex={-1}
-												aria-label={t("common.resizeColumn", { column: header.column.id })}
-												className={cn(
-													"absolute inset-y-0 -right-2 z-10 w-4 cursor-col-resize touch-none border-0 bg-transparent p-0",
-													"after:pointer-events-none after:absolute after:inset-y-2 after:right-2 after:w-px after:bg-transparent hover:after:bg-border",
-													header.column.getIsResizing() && "after:bg-primary",
-												)}
-												onMouseDown={header.getResizeHandler()}
-												onTouchStart={header.getResizeHandler()}
-												onClick={(event) => {
-													event.stopPropagation();
+		<ContextMenu>
+			<ContextMenuTrigger>
+				<div ref={rootRef}>
+					<Table
+						containerClassName='overflow-visible'
+						className={cn("table-fixed", compact ? "[&_th]:h-8 [&_td]:py-1" : rowSize >= 56 ? "[&_th]:h-10 [&_td]:py-2" : undefined)}
+						style={columnVars as CSSProperties}>
+						<TableHeader className='sticky top-0 z-20 bg-card'>
+							{table.getHeaderGroups().map((headerGroup) => (
+								<TableRow key={headerGroup.id} className='hover:bg-transparent'>
+									{headerGroup.headers.map((header) => {
+										const sorted = header.column.getIsSorted();
+										return (
+											<TableHead
+												key={header.id}
+												colSpan={header.colSpan}
+												aria-sort={sorted === "asc" ? "ascending" : sorted === "desc" ? "descending" : undefined}
+												draggable
+												onDragStart={() => setDraggedColumnId(header.column.id)}
+												onDragOver={(e) => e.preventDefault()}
+												onDrop={() => {
+													if (draggedColumnId && draggedColumnId !== header.column.id) {
+														const leafColumns = table.getAllLeafColumns().map((c) => c.id);
+														const currentOrder = table.getState().columnOrder.length > 0 ? table.getState().columnOrder : leafColumns;
+														const newOrder = reorderColumn(draggedColumnId, header.column.id, currentOrder);
+														table.setColumnOrder(newOrder);
+													}
+													setDraggedColumnId(null);
 												}}
-											/>
-										) : null}
-									</TableHead>
+												className={cn(
+													"relative overflow-visible bg-card transition-colors hover:bg-muted/60",
+													sorted && "bg-muted/70 hover:bg-muted",
+													draggedColumnId === header.column.id && "opacity-50",
+													header.column.columnDef.meta?.className,
+												)}
+												style={{ width: columnWidth(header.column.id) }}>
+												<SortableHead header={header} />
+												{header.column.getCanResize() ? (
+													<button
+														type='button'
+														tabIndex={-1}
+														aria-label={t("common.resizeColumn", { column: header.column.id })}
+														className={cn(
+															"absolute inset-y-0 -right-2 z-10 w-4 cursor-col-resize touch-none border-0 bg-transparent p-0",
+															"after:pointer-events-none after:absolute after:inset-y-2 after:right-2 after:w-px after:bg-transparent hover:after:bg-border",
+															header.column.getIsResizing() && "after:bg-primary",
+														)}
+														onMouseDown={header.getResizeHandler()}
+														onTouchStart={header.getResizeHandler()}
+														onClick={(event) => {
+															event.stopPropagation();
+														}}
+													/>
+												) : null}
+											</TableHead>
+										);
+									})}
+								</TableRow>
+							))}
+						</TableHeader>
+						<TableBody>
+							{paddingTop > 0 ? (
+								<tr aria-hidden>
+									<td colSpan={visibleColumns.length} style={{ height: paddingTop, padding: 0, border: 0 }} />
+								</tr>
+							) : null}
+							{virtualItems.map((virtualRow) => {
+								const item = items[virtualRow.index];
+								if (!item) {
+									return null;
+								}
+								if (item.type === "group") {
+									return (
+										<GroupHeader key={item.key} colSpan={visibleColumns.length} data-index={virtualRow.index} ref={rowSizeProp ? undefined : virtualizer.measureElement}>
+											{item.label}
+										</GroupHeader>
+									);
+								}
+								return (
+									<LeafRow
+										key={item.key}
+										row={item.row}
+										indent={item.indent}
+										index={virtualRow.index}
+										height={rowSizeProp}
+										version={rowVersion ? rowVersion(item.row) : String(renderTick.current)}
+										columnsKey={columnsKey}
+										render={renderLeaf}
+										measure={rowSizeProp ? undefined : virtualizer.measureElement}
+									/>
 								);
 							})}
-						</TableRow>
-					))}
-				</TableHeader>
-				<TableBody>
-					{paddingTop > 0 ? (
-						<tr aria-hidden>
-							<td colSpan={visibleColumns.length} style={{ height: paddingTop, padding: 0, border: 0 }} />
-						</tr>
-					) : null}
-					{virtualItems.map((virtualRow) => {
-						const item = items[virtualRow.index];
-						if (!item) {
-							return null;
-						}
-						if (item.type === "group") {
-							return (
-								<GroupHeader key={item.key} colSpan={visibleColumns.length} data-index={virtualRow.index} ref={rowSizeProp ? undefined : virtualizer.measureElement}>
-									{item.label}
-								</GroupHeader>
-							);
-						}
-						return (
-							<LeafRow
-								key={item.key}
-								row={item.row}
-								indent={item.indent}
-								index={virtualRow.index}
-								height={rowSizeProp}
-								version={rowVersion ? rowVersion(item.row) : String(renderTick.current)}
-								columnsKey={columnsKey}
-								render={renderLeaf}
-								measure={rowSizeProp ? undefined : virtualizer.measureElement}
-							/>
-						);
-					})}
-					{paddingBottom > 0 ? (
-						<tr aria-hidden>
-							<td colSpan={visibleColumns.length} style={{ height: paddingBottom, padding: 0, border: 0 }} />
-						</tr>
-					) : null}
-				</TableBody>
-			</Table>
-		</div>
+							{paddingBottom > 0 ? (
+								<tr aria-hidden>
+									<td colSpan={visibleColumns.length} style={{ height: paddingBottom, padding: 0, border: 0 }} />
+								</tr>
+							) : null}
+						</TableBody>
+					</Table>
+				</div>
+			</ContextMenuTrigger>
+			<ContextMenuContent>
+				{table.getAllLeafColumns().map((column) => (
+					<ContextMenuCheckboxItem
+						key={column.id}
+						checked={column.getIsVisible()}
+						onCheckedChange={(value) => column.toggleVisibility(!!value)}>
+						{flexRender(column.columnDef.header, column.getContext())}
+					</ContextMenuCheckboxItem>
+				))}
+			</ContextMenuContent>
+		</ContextMenu>
 	);
 }
