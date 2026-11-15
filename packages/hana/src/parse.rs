@@ -9,21 +9,23 @@ pub fn player_markers() -> impl Iterator<Item = &'static str> {
 		.filter(|line| !line.is_empty() && !line.starts_with('#'))
 }
 
-pub fn strip_player_suffix(value: &str) -> &str {
+pub fn strip_player_suffix(value: &str) -> String {
 	let lower = value.to_ascii_lowercase();
-	if let Some(idx) = lower.rfind(" - ") {
-		let rest = lower[idx + 3..].trim();
-		if player_markers().any(|marker| rest.starts_with(marker)) {
-			return value[..idx].trim();
-		}
-	}
 	if let Some(idx) = lower.rfind(" - vlc media player") {
-		return value[..idx].trim();
+		return value[..idx].trim().to_string();
 	}
 	if let Some(idx) = lower.rfind(" - vlc") {
-		return value[..idx].trim();
+		return value[..idx].trim().to_string();
 	}
-	value.trim()
+	let cleaned = value.replace("[Kusonime] ", "").replace("[Kuramanime] ", "");
+	let lower_cleaned = cleaned.to_ascii_lowercase();
+	if let Some(idx) = lower_cleaned.rfind(" - ") {
+		let rest = lower_cleaned[idx + 3..].trim();
+		if player_markers().any(|marker| rest.starts_with(marker)) {
+			return cleaned[..idx].trim().to_string();
+		}
+	}
+	cleaned.trim().to_string()
 }
 
 fn first_i32(value: &str) -> Option<i32> {
@@ -128,7 +130,7 @@ pub fn elements_to_parsed(elements: &[Element]) -> Option<Parsed> {
 
 pub fn parse_filename(input: &str) -> Option<Parsed> {
 	let stripped = strip_player_suffix(input);
-	elements_to_parsed(&parse(stripped, Options::default()))
+	elements_to_parsed(&parse(&stripped, Options::default()))
 }
 
 pub fn parse_file_path(input: &str) -> Option<Parsed> {
@@ -139,10 +141,11 @@ pub fn parse_file_paths(inputs: &[&str]) -> Vec<Option<Parsed>> {
 	if inputs.is_empty() {
 		return Vec::new();
 	}
-	let stripped: Vec<&str> = inputs.iter().copied().map(strip_player_suffix).collect();
-	crate::anitomy::parse_together(&stripped, Options::default())
+	let stripped: Vec<String> = inputs.iter().copied().map(strip_player_suffix).collect();
+	let stripped_refs: Vec<&str> = stripped.iter().map(|s| s.as_str()).collect();
+	crate::anitomy::parse_together(&stripped_refs, Options::default())
 		.into_iter()
-		.zip(stripped.iter().copied())
+		.zip(stripped_refs.iter().copied())
 		.map(|(elements, text)| elements_to_parsed(&elements).or_else(|| parse_filename(text)))
 		.collect()
 }
