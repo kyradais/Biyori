@@ -50,31 +50,13 @@ pub fn now_playing(input: NowPlayingInput) -> Option<NowPlaying> {
 		} else {
 			None
 		};
-		let mut file_path = ipc.or_else(|| file_path_from_cmd(proc.cmd()));
+		let file_path = ipc.or_else(|| file_path_from_cmd(proc.cmd()));
 		let title = get_linux_window_title(pid_u32);
-		if file_path.is_none() {
-			if let Some(ref t) = title {
-				let cleaned = crate::parse::strip_player_suffix(t);
-				if !cleaned.is_empty() {
-					let lower_cleaned = cleaned.to_lowercase();
-					let path_str = if lower_cleaned.ends_with(".mkv")
-						|| lower_cleaned.ends_with(".mp4")
-						|| lower_cleaned.ends_with(".avi")
-						|| lower_cleaned.ends_with(".webm")
-						|| lower_cleaned.ends_with(".mov")
-					{
-						format!("/home/user/Anime/{}", cleaned)
-					} else {
-						format!("/home/user/Anime/{}.mkv", cleaned)
-					};
-					file_path = Some(path_str);
-				}
-			}
-		}
+		let clean_title = title.as_deref().map(crate::parse::strip_player_suffix).filter(|s| !s.is_empty());
 		hits.push(NowPlaying {
 			player: key,
 			window_id: pid_u32.to_string(),
-			title,
+			title: clean_title.or(title),
 			file_path,
 			url: None,
 			foreground: false,
