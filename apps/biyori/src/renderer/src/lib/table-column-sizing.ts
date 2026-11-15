@@ -1,4 +1,4 @@
-import type { ColumnOrderState, ColumnSizingState, VisibilityState, OnChangeFn } from "@tanstack/react-table";
+import type { ColumnOrderState, ColumnSizingState, OnChangeFn, VisibilityState } from "@tanstack/react-table";
 import { useState } from "react";
 import { z } from "zod";
 

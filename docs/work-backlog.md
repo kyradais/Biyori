@@ -50,6 +50,65 @@ implemented, validated, reordered, and closed.
 
 ## Queue
 
+### BUG-002 — Season column sorts alphabetically instead of chronologically
+
+- Order: 2
+- Type: bug
+- Status: done
+- Depends on: none
+- Related to: none
+- Reported by: user
+- Priority: medium
+- Coordinator: Azalea
+- Workers and write scopes: sequential
+- Worktree/branch: dev-alter-1
+- Parallelization: sequential by default
+
+#### Current behavior and requested outcome
+
+- Current/observed behavior: Sorting the `season` column in the anime list table (and the search results table) sorts the label text alphabetically, so `Fall 2001` comes before `Spring 2003`.
+- Expected/requested outcome: The column sorts chronologically: year first, then season order Winter, Spring, Summer, Fall. Ascending gives `Winter 2001`, `Spring 2001`, `Summer 2001`, `Fall 2001`, `Summer 2002`, `Fall 2002`, `Winter 2003`, `Spring 2003`, `Fall 2004`.
+- Reproduction/conditions: Open the anime list table and click the `season` column header to sort ascending.
+
+#### Diagnosis or design
+
+- Root cause / design notes: The column used `accessorKey: "season"` on a display string such as `Fall 2001`, so TanStack Table fell back to alphabetical text sorting. Fixed by giving the column a numeric accessor (`year * 4 + seasonIndex`) built by `seasonSortKey` in `apps/biyori/src/lib/season-order.ts`, with `sortUndefined: "last"` so rows without a known season stay at the end.
+
+#### Acceptance criteria
+
+- [x] Ascending sort on the season column orders by year, then Winter, Spring, Summer, Fall.
+- [x] Descending sort reverses that order.
+- [x] Rows with an unknown season sort last instead of interleaving.
+
+#### Implementation checklist
+
+- [x] Confirm the report, scope, and acceptance criteria.
+- [x] Inspect season column definitions in the anime list and search tables.
+- [x] Implement the numeric season sort key helper and wire it into both tables.
+- [x] Add a regression test for the season sort key.
+- [x] Run applicable tests and checks; record exact commands and results.
+- [x] Review the final diff and update directly related documentation.
+
+#### Files and implementation notes
+
+- `apps/biyori/src/lib/season-order.ts`: New helper with `parseSeasonLabel` and `seasonSortKey`.
+- `apps/biyori/src/lib/season-order.test.ts`: Regression tests for the ordering rules.
+- `apps/biyori/src/renderer/src/lib/season-order.table.test.ts`: Sorts a real TanStack table with the new column def to prove the table wiring.
+- `apps/biyori/src/renderer/src/components/anime-list-view.tsx`: Season column now sorts on the numeric key.
+- `apps/biyori/src/renderer/src/components/app/search/page.tsx`: Same fix for the search results season column.
+
+#### Verification results
+
+- `bun test apps/biyori/src/lib/season-order.test.ts` -> 6 pass, 0 fail.
+- `bun test apps/biyori/src/renderer/src/lib/season-order.table.test.ts` -> 3 pass, 0 fail (ascending, descending, unknown seasons last).
+- `bun test` (whole `apps/biyori` suite) -> 254 pass, 0 fail.
+- `bun biome check --write -- <changed files>` -> clean; full `bun biome check` still reports pre-existing findings in `apps/biyori/src/lib/library-summary.test.ts`, `apps/biyori/src/renderer/src/components/app/shared/data-table.tsx`, and `apps/biyori/src/renderer/src/lib/table-column-sizing.ts`, which are untouched by this change.
+- `bun run typecheck` not run (per `.cursor/rules/biome-check.mdc`); a scoped `tsc -p tsconfig.web.json` run showed no errors in the changed files.
+
+#### Blockers
+
+- None.
+
 ### BUG-001 — VLC playback title detection returns Unknown Title
 
 - Order: 1

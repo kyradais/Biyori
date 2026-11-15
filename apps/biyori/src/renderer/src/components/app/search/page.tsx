@@ -6,6 +6,7 @@ import { CircleAlertIcon, SearchIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AiringStatusMark } from "@/components/app/anime/airing-status";
 import { parseAnimeInfoId } from "@/lib/schemas/anime-info-search";
+import { seasonSortKey } from "@/lib/season-order";
 import { listStatusLabel } from "@/mainview/components/app/anime/list-action";
 import { AnimeItemCommands } from "@/mainview/components/app/anime-info/item-commands";
 import { DataTable, resizableTableOptions } from "@/mainview/components/app/shared/data-table";
@@ -69,7 +70,8 @@ const columns: ColumnDef<SearchRow>[] = [
 	},
 	{
 		id: "season",
-		accessorFn: (row) => formatSeasonLabel(row.season, row.seasonYear),
+		accessorFn: (row) => seasonSortKey(row.season, row.seasonYear),
+		sortUndefined: "last",
 		header: () => t("search.season"),
 		cell: ({ row }) => formatSeasonLabel(row.original.season, row.original.seasonYear) || "-",
 	},

@@ -9,6 +9,7 @@ import { AiringStatusMark } from "@/components/app/anime/airing-status";
 import { desktopRpc } from "@/desktop-rpc";
 import { formatScore } from "@/lib/anilist-score";
 import type { AnimeListViewAs } from "@/lib/schemas/app-settings";
+import { seasonSortKey } from "@/lib/season-order";
 import { listStatusLabel } from "@/mainview/components/app/anime/list-action";
 import { AnimeListProgress } from "@/mainview/components/app/anime/list-progress";
 import { AnimeItemCommands } from "@/mainview/components/app/anime-info/item-commands";
@@ -249,7 +250,9 @@ const columns: ColumnDef<AnimeRow>[] = [
 		cell: ({ row }) => <span className={row.original.type ? undefined : "text-muted-foreground"}>{row.original.type ? animeTypeLabel(row.original.type) : "-"}</span>,
 	},
 	{
-		accessorKey: "season",
+		id: "season",
+		accessorFn: (row) => seasonSortKey(row.season),
+		sortUndefined: "last",
 		header: () => t("list.season"),
 		cell: ({ row }) => <span className={row.original.season ? undefined : "text-muted-foreground"}>{row.original.season || "-"}</span>,
 	},
