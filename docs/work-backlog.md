@@ -54,7 +54,7 @@ implemented, validated, reordered, and closed.
 
 - Order: 1
 - Type: bug
-- Status: in_progress
+- Status: done
 - Depends on: none
 - Related to: none
 - Reported by: user
