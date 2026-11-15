@@ -1,11 +1,14 @@
-import { ContextMenu, ContextMenuCheckboxItem, ContextMenuContent, ContextMenuTrigger } from "@/mainview/components/ui/context-menu";
 import { useTranslation } from "@biyori/translations/react";
 import { flexRender, type Header, type Row, type Table as TanstackTable } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ChevronDownIcon, ChevronsUpDownIcon, ChevronUpIcon } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { type ComponentProps, type CSSProperties, cloneElement, isValidElement, memo, type ReactElement, type ReactNode, useEffect, useRef, useState } from "react";
+import { ContextMenu, ContextMenuCheckboxItem, ContextMenuContent, ContextMenuTrigger } from "@/mainview/components/ui/context-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/mainview/components/ui/table";
 import { cn } from "@/mainview/lib/utils";
+
+const MotionTableHead = motion.create(TableHead);
 
 export const resizableTableOptions = {
 	enableColumnResizing: true,
@@ -251,24 +254,24 @@ export function DataTable<TData>({
 	}
 
 	return (
-		<ContextMenu>
-			<ContextMenuTrigger>
-				<div ref={rootRef}>
-					<Table
-						containerClassName='overflow-visible'
-						className={cn("table-fixed", compact ? "[&_th]:h-8 [&_td]:py-1" : rowSize >= 56 ? "[&_th]:h-10 [&_td]:py-2" : undefined)}
-						style={columnVars as CSSProperties}>
+		<div ref={rootRef}>
+			<Table
+				containerClassName='overflow-visible'
+				className={cn("table-fixed", compact ? "[&_th]:h-8 [&_td]:py-1" : rowSize >= 56 ? "[&_th]:h-10 [&_td]:py-2" : undefined)}
+				style={columnVars as CSSProperties}>
+				<ContextMenu>
+					<ContextMenuTrigger className='contents'>
 						<TableHeader className='sticky top-0 z-20 bg-card'>
 							{table.getHeaderGroups().map((headerGroup) => (
 								<TableRow key={headerGroup.id} className='hover:bg-transparent'>
 									{headerGroup.headers.map((header) => {
 										const sorted = header.column.getIsSorted();
 										return (
-											<TableHead
+											<MotionTableHead
 												key={header.id}
 												colSpan={header.colSpan}
 												aria-sort={sorted === "asc" ? "ascending" : sorted === "desc" ? "descending" : undefined}
-												draggable
+												draggable={!header.column.getIsResizing()}
 												onDragStart={() => setDraggedColumnId(header.column.id)}
 												onDragOver={(e) => e.preventDefault()}
 												onDrop={() => {
@@ -280,6 +283,8 @@ export function DataTable<TData>({
 													}
 													setDraggedColumnId(null);
 												}}
+												layout
+												transition={{ type: "spring", stiffness: 400, damping: 30 }}
 												className={cn(
 													"relative overflow-visible bg-card transition-colors hover:bg-muted/60",
 													sorted && "bg-muted/70 hover:bg-muted",
@@ -305,63 +310,60 @@ export function DataTable<TData>({
 														}}
 													/>
 												) : null}
-											</TableHead>
+											</MotionTableHead>
 										);
 									})}
 								</TableRow>
 							))}
 						</TableHeader>
-						<TableBody>
-							{paddingTop > 0 ? (
-								<tr aria-hidden>
-									<td colSpan={visibleColumns.length} style={{ height: paddingTop, padding: 0, border: 0 }} />
-								</tr>
-							) : null}
-							{virtualItems.map((virtualRow) => {
-								const item = items[virtualRow.index];
-								if (!item) {
-									return null;
-								}
-								if (item.type === "group") {
-									return (
-										<GroupHeader key={item.key} colSpan={visibleColumns.length} data-index={virtualRow.index} ref={rowSizeProp ? undefined : virtualizer.measureElement}>
-											{item.label}
-										</GroupHeader>
-									);
-								}
-								return (
-									<LeafRow
-										key={item.key}
-										row={item.row}
-										indent={item.indent}
-										index={virtualRow.index}
-										height={rowSizeProp}
-										version={rowVersion ? rowVersion(item.row) : String(renderTick.current)}
-										columnsKey={columnsKey}
-										render={renderLeaf}
-										measure={rowSizeProp ? undefined : virtualizer.measureElement}
-									/>
-								);
-							})}
-							{paddingBottom > 0 ? (
-								<tr aria-hidden>
-									<td colSpan={visibleColumns.length} style={{ height: paddingBottom, padding: 0, border: 0 }} />
-								</tr>
-							) : null}
-						</TableBody>
-					</Table>
-				</div>
-			</ContextMenuTrigger>
-			<ContextMenuContent>
-				{table.getAllLeafColumns().map((column) => (
-					<ContextMenuCheckboxItem
-						key={column.id}
-						checked={column.getIsVisible()}
-						onCheckedChange={(value) => column.toggleVisibility(!!value)}>
-						{flexRender(column.columnDef.header, column.getContext())}
-					</ContextMenuCheckboxItem>
-				))}
-			</ContextMenuContent>
-		</ContextMenu>
+					</ContextMenuTrigger>
+					<ContextMenuContent>
+						{table.getAllLeafColumns().map((column) => (
+							<ContextMenuCheckboxItem key={column.id} checked={column.getIsVisible()} onCheckedChange={(value) => column.toggleVisibility(!!value)}>
+								{typeof column.columnDef.header === "string" ? column.columnDef.header : column.id}
+							</ContextMenuCheckboxItem>
+						))}
+					</ContextMenuContent>
+				</ContextMenu>
+				<TableBody>
+					{paddingTop > 0 ? (
+						<tr aria-hidden>
+							<td colSpan={visibleColumns.length} style={{ height: paddingTop, padding: 0, border: 0 }} />
+						</tr>
+					) : null}
+					{virtualItems.map((virtualRow) => {
+						const item = items[virtualRow.index];
+						if (!item) {
+							return null;
+						}
+						if (item.type === "group") {
+							return (
+								<GroupHeader key={item.key} colSpan={visibleColumns.length} data-index={virtualRow.index} ref={rowSizeProp ? undefined : virtualizer.measureElement}>
+									{item.label}
+								</GroupHeader>
+							);
+						}
+						return (
+							<LeafRow
+								key={item.key}
+								row={item.row}
+								indent={item.indent}
+								index={virtualRow.index}
+								height={rowSizeProp}
+								version={rowVersion ? rowVersion(item.row) : String(renderTick.current)}
+								columnsKey={columnsKey}
+								render={renderLeaf}
+								measure={rowSizeProp ? undefined : virtualizer.measureElement}
+							/>
+						);
+					})}
+					{paddingBottom > 0 ? (
+						<tr aria-hidden>
+							<td colSpan={visibleColumns.length} style={{ height: paddingBottom, padding: 0, border: 0 }} />
+						</tr>
+					) : null}
+				</TableBody>
+			</Table>
+		</div>
 	);
 }
