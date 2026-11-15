@@ -8,6 +8,9 @@ fn get_linux_window_title(pid: u32) -> Option<String> {
 		.args(["search", "--pid", &pid.to_string(), "--name", ".*"])
 		.output()
 		.ok()?;
+	if !output.status.success() {
+		return None;
+	}
 	let window_ids = String::from_utf8_lossy(&output.stdout);
 	for wid in window_ids.lines() {
 		let wid = wid.trim();
@@ -18,8 +21,11 @@ fn get_linux_window_title(pid: u32) -> Option<String> {
 			.args(["getwindowname", wid])
 			.output()
 			.ok()?;
+		if !title_output.status.success() {
+			continue;
+		}
 		let title = String::from_utf8_lossy(&title_output.stdout).trim().to_string();
-		if !title.is_empty() {
+		if !title.is_empty() && !title.starts_with("Error") {
 			return Some(title);
 		}
 	}
