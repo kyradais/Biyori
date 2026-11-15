@@ -1,0 +1,114 @@
+# Bug and feature backlog
+
+This file is the single persistent queue and checklist for bug reports and
+feature requests. Agents update it as work is triaged, investigated,
+implemented, validated, reordered, and closed.
+
+## Queue rules
+
+- Give each report a stable ID using its type: `BUG-001`, `BUG-002`, ... or
+  `FEAT-001`, `FEAT-002`, .... Never reuse an ID, including for duplicate or
+  closed items.
+- Bugs and features share one global queue. Add every new item at the end,
+  regardless of type. Keep earlier unfinished work ahead of later reports unless
+  the user chooses otherwise or an agent records a concrete reason to reorder.
+- Continue an `in_progress` item first. Otherwise, work from the lowest-order
+  actionable item, including `needs-triage` items. Temporarily skip a `blocked`
+  item only while its blocker remains unresolved; preserve its queue position.
+- To reorder, change the `Order` values and add a change-log entry with the old
+  and new order, reason, and date. User-stated priority takes precedence.
+- Record dependencies explicitly in `Depends on`; queue order alone does not
+  imply a dependency. Use `Related to` for intersecting but independently
+  actionable work.
+- Keep each item's checklist specific to its outcome and diagnosis. Update it
+  when investigation changes the plan; do not mark planned steps complete until
+  they are actually done.
+- Assign one coordinator per active item. Record worker ownership and disjoint
+  write scopes before parallelizing; workers report progress to the coordinator
+  and do not edit this shared queue or mark items done.
+- When a bug and feature overlap, keep separate entries if they have distinct
+  acceptance criteria and link them with `Related to` or `Depends on`. If one
+  implementation satisfies both, verify both checklists before marking either
+  item `done`; do not duplicate the implementation steps unnecessarily.
+- `done` means the acceptance criteria and applicable verification passed. If
+  verification is blocked, use `blocked` and explain what remains.
+- Keep plans, implementation details, and test results here; use
+  [`agent-handoff.md`](agent-handoff.md) for the active agent's immediate baton.
+- The user may report bugs or features in plain language or by ID. Preserve
+  their intent, ask for clarification only when needed to define behavior, and
+  do not invent reproduction steps or acceptance criteria.
+
+## Status values
+
+- `needs-triage`: report recorded, but behavior or expected result needs
+  clarification/investigation before it is ready to fix.
+- `queued`: sufficiently understood to await its turn.
+- `in_progress`: an agent is actively working on it.
+- `blocked`: work cannot proceed or required verification is unavailable; state
+  the blocker and next action.
+- `done`: acceptance criteria and relevant verification are complete.
+
+## Queue
+
+No bugs or features have been reported into the queue yet.
+
+## Reorder history
+
+No reorders yet.
+
+## Entry template
+
+Copy this entry for each bug or feature, assign the next ID for its type, and set
+its global order and status. Replace prompts with known facts; mark unknown
+details as unknown rather than guessing.
+
+```md
+### BUG-NNN or FEAT-NNN — Short summary
+
+- Order: N
+- Type: bug or feature
+- Status: needs-triage
+- Depends on: none
+- Related to: none
+- Reported by: user
+- Priority: unspecified
+- Coordinator: unassigned
+- Workers and write scopes: none
+- Worktree/branch: not assigned
+- Parallelization: sequential by default
+
+#### Current behavior and requested outcome
+
+- Current/observed behavior:
+- Expected/requested outcome:
+- Reproduction/conditions (bugs; N/A for features):
+
+#### Diagnosis or design
+
+- Root cause / design notes: not investigated
+
+#### Acceptance criteria
+
+- [ ] Describe each user-visible or otherwise measurable outcome.
+
+#### Implementation checklist
+
+- [ ] Confirm the report, scope, and acceptance criteria.
+- [ ] Refine the plan into concrete code/documentation changes.
+- [ ] Implement the minimal complete change.
+- [ ] Add or update a regression test, or record why one is not applicable.
+- [ ] Run applicable tests and checks; record exact commands and results.
+- [ ] Review the final diff and update directly related documentation.
+
+#### Files and implementation notes
+
+- None yet.
+
+#### Verification results
+
+- Not run.
+
+#### Blockers
+
+- None.
+```
